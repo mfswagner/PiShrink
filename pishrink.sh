@@ -147,6 +147,17 @@ fi
 
 #Make sure filesystem is ok
 e2fsck -p -f "$loopback"
+rc=$?
+if (( $rc != 0 )); then
+	echo "Error $rc occured when checking filesystem. Retrying ..."
+	e2fsck -f -y "$loopback"
+	rc=$?
+	if (( $rc >= 4 )); then
+		echo "ERROR: Uncorrectable error $rc occured when checking filesystem"
+		exit -6
+	fi
+fi
+
 minsize=$(resize2fs -P "$loopback" | cut -d ':' -f 2 | tr -d ' ')
 if [[ $currentsize -eq $minsize ]]; then
   echo "ERROR: Image already shrunk to smallest size"
